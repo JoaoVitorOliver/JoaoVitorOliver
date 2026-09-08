@@ -24,19 +24,21 @@ export default function FilterBar({
         <button
           type="button"
           className={`chip ${store === '' ? 'chip--active' : ''}`}
+          aria-pressed={store === ''}
           onClick={() => onStoreChange('')}
         >
           Todas as lojas
         </button>
 
-        {stores.map((name) => (
+        {stores.map((option) => (
           <button
-            key={name}
+            key={option.slug}
             type="button"
-            className={`chip ${store === name ? 'chip--active' : ''}`}
-            onClick={() => onStoreChange(name)}
+            className={`chip ${store === option.slug ? 'chip--active' : ''}`}
+            aria-pressed={store === option.slug}
+            onClick={() => onStoreChange(option.slug)}
           >
-            {name}
+            {option.name}
           </button>
         ))}
       </div>
@@ -46,9 +48,9 @@ export default function FilterBar({
           <span className="field__label">Categoria</span>
           <select value={category} onChange={(event) => onCategoryChange(event.target.value)}>
             <option value="">Todas</option>
-            {categories.map((name) => (
-              <option key={name} value={name}>
-                {name}
+            {categories.map((option) => (
+              <option key={option.slug} value={option.slug}>
+                {option.name}
               </option>
             ))}
           </select>

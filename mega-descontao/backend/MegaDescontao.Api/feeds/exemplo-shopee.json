@@ -1,0 +1,33 @@
+[
+  {
+    "externalProductId": "SHP-99001",
+    "title": "Umidificador de Ar Ultrassônico 300ml",
+    "description": "Silencioso, com luz noturna e desligamento automático.",
+    "imageUrl": "https://picsum.photos/seed/umidificador/600/600",
+    "currentPrice": 59.9,
+    "originalPrice": 129.9,
+    "productUrl": "https://shopee.com.br/search?keyword=umidificador",
+    "affiliateUrl": "https://shopee.com.br/search?keyword=umidificador&af=exemplo",
+    "categoryName": "Casa e Cozinha"
+  },
+  {
+    "externalProductId": "SHP-99002",
+    "title": "Suporte Articulado para Celular",
+    "description": "Braço flexível com trava reforçada.",
+    "imageUrl": "https://picsum.photos/seed/suporte/600/600",
+    "currentPrice": 24.9,
+    "originalPrice": 69.9,
+    "productUrl": "https://shopee.com.br/search?keyword=suporte%20celular",
+    "affiliateUrl": "https://shopee.com.br/search?keyword=suporte%20celular&af=exemplo",
+    "categoryName": "Eletrônicos"
+  },
+  {
+    "externalProductId": "SHP-99003",
+    "title": "Oferta inválida sem link",
+    "imageUrl": "",
+    "currentPrice": 10.0,
+    "productUrl": "",
+    "affiliateUrl": "javascript:alert(1)",
+    "categoryName": "Eletrônicos"
+  }
+]

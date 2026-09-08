@@ -10,7 +10,7 @@ async function getJson(path, signal) {
   return response.json()
 }
 
-export function fetchOffers({ search, store, category, sort, page, pageSize }, signal) {
+export function fetchProducts({ search, store, category, sort, page, pageSize }, signal) {
   const params = new URLSearchParams()
 
   if (search) params.set('search', search)
@@ -20,14 +20,21 @@ export function fetchOffers({ search, store, category, sort, page, pageSize }, s
   params.set('page', String(page))
   params.set('pageSize', String(pageSize))
 
-  return getJson(`/api/offers?${params}`, signal)
+  return getJson(`/api/products?${params}`, signal)
 }
 
-export function fetchFilterOptions(signal) {
-  return getJson('/api/offers/filters', signal)
+export function fetchCategories(signal) {
+  return getJson('/api/categories', signal)
 }
 
-/// O clique nunca vai direto para o marketplace: passa pela API para ser contabilizado.
+export function fetchStores(signal) {
+  return getJson('/api/stores', signal)
+}
+
+/// O clique nunca vai direto para o marketplace: passa pela API, que contabiliza
+/// e só então redireciona para o link de afiliado guardado no banco.
 export function buildGoUrl(offerId) {
   return `${API_URL}/api/go/${offerId}`
 }
+
+export { API_URL }

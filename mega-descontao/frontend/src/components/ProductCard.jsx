@@ -2,21 +2,24 @@ import { useState } from 'react'
 import { buildGoUrl } from '../api'
 import { formatPrice, storeStyle } from '../utils/format'
 
-export default function OfferCard({ offer }) {
+export default function ProductCard({ product }) {
   const [imageFailed, setImageFailed] = useState(false)
+
+  const offer = product.bestOffer
   const hasDiscount = offer.discountPercentage > 0
+  const otherStores = product.offerCount - 1
 
   return (
     <article className="card">
       <div className="card__media">
-        {imageFailed || !offer.imageUrl ? (
+        {imageFailed || !product.imageUrl ? (
           <div className="card__media-fallback" aria-hidden="true">
             🏷️
           </div>
         ) : (
           <img
-            src={offer.imageUrl}
-            alt={offer.title}
+            src={product.imageUrl}
+            alt={product.title}
             loading="lazy"
             onError={() => setImageFailed(true)}
           />
@@ -24,38 +27,44 @@ export default function OfferCard({ offer }) {
 
         {hasDiscount && <span className="badge badge--discount">-{offer.discountPercentage}%</span>}
 
-        <span className="badge badge--store" style={storeStyle(offer.store)}>
-          {offer.store}
+        <span className="badge badge--store" style={storeStyle(offer.store.name)}>
+          {offer.store.name}
         </span>
       </div>
 
       <div className="card__body">
-        <span className="card__category">{offer.category}</span>
-        <h3 className="card__title" title={offer.title}>
-          {offer.title}
+        <span className="card__category">{product.category.name}</span>
+        <h3 className="card__title" title={product.title}>
+          {product.title}
         </h3>
 
         <div className="card__prices">
           {offer.originalPrice != null && (
             <span className="card__price-old">{formatPrice(offer.originalPrice)}</span>
           )}
-          <span className="card__price">{formatPrice(offer.price)}</span>
+          <span className="card__price">{formatPrice(offer.currentPrice)}</span>
         </div>
       </div>
 
       <div className="card__footer">
         <a
           className="cta"
-          href={buildGoUrl(offer.id)}
+          href={buildGoUrl(offer.offerId)}
           target="_blank"
           rel="noopener noreferrer nofollow sponsored"
         >
           Aproveitar oferta
         </a>
 
-        {offer.clickCount > 0 && (
-          <span className="card__clicks">{offer.clickCount} cliques</span>
-        )}
+        <span className="card__clicks">
+          {otherStores > 0 && (
+            <>
+              também em {otherStores === 1 ? 'mais 1 loja' : `mais ${otherStores} lojas`}
+              {offer.clickCount > 0 && ' · '}
+            </>
+          )}
+          {offer.clickCount > 0 && `${offer.clickCount} cliques`}
+        </span>
       </div>
     </article>
   )

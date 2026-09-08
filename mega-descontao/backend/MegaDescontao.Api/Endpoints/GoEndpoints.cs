@@ -11,45 +11,62 @@ public static class GoEndpoints
 
     public static IEndpointRouteBuilder MapGoEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/go/{id:int}", RedirectToAffiliate)
+        app.MapGet("/api/go/{offerId:int}", RedirectToAffiliate)
             .WithName("GoToOffer")
             .WithTags("Redirecionamento")
-            .WithSummary("Registra o clique na oferta e redireciona para o link de afiliado.");
+            .WithSummary("Registra o clique e redireciona para o link de afiliado da oferta.")
+            .RequireRateLimiting(RateLimitPolicies.Redirect);
 
         return app;
     }
 
     private static async Task<IResult> RedirectToAffiliate(
-        int id,
+        int offerId,
         AppDbContext db,
         HttpContext http,
-        ILoggerFactory loggerFactory)
+        ILogger<Program> logger)
     {
-        var offer = await db.Offers.FirstOrDefaultAsync(o => o.Id == id && o.IsActive);
+        var now = DateTime.UtcNow;
+
+        // O destino vem exclusivamente do banco, endereçado por um id inteiro: o cliente
+        // nunca informa URL nenhuma, então não há como transformar isso em open redirect.
+        var offer = await db.Offers
+            .AsNoTracking()
+            .Where(o => o.Id == offerId &&
+                        o.Status == OfferStatus.Active &&
+                        (o.ExpiresAt == null || o.ExpiresAt > now) &&
+                        o.Product!.IsActive)
+            .Select(o => new { o.Id, o.AffiliateUrl })
+            .FirstOrDefaultAsync();
+
         if (offer is null)
         {
             return Results.NotFound(new { message = "Oferta não encontrada ou fora do ar." });
         }
 
-        db.Clicks.Add(new OfferClick
-        {
-            OfferId = offer.Id,
-            ClickedAt = DateTime.UtcNow,
-            UserAgent = Truncate(http.Request.Headers.UserAgent.ToString(), MaxUserAgentLength),
-            Referrer = Truncate(http.Request.Headers.Referer.ToString(), MaxReferrerLength)
-        });
-        offer.ClickCount++;
-
         try
         {
+            db.Clicks.Add(new OfferClick
+            {
+                ProductOfferId = offer.Id,
+                ClickedAt = now,
+                UserAgent = Truncate(http.Request.Headers.UserAgent.ToString(), MaxUserAgentLength),
+                Referrer = Truncate(http.Request.Headers.Referer.ToString(), MaxReferrerLength),
+            });
+
             await db.SaveChangesAsync();
+
+            // Incremento feito pelo banco (UPDATE ... SET ClickCount = ClickCount + 1).
+            // Ler e reescrever em memória perderia cliques simultâneos na mesma oferta:
+            // dois requests leem o mesmo valor e ambos gravam o mesmo +1.
+            await db.Offers
+                .Where(o => o.Id == offer.Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(o => o.ClickCount, o => o.ClickCount + 1));
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex)
         {
-            // Perder a estatística é bem menos grave do que perder a venda:
-            // se a gravação falhar, o usuário segue para a loja mesmo assim.
-            loggerFactory.CreateLogger(nameof(GoEndpoints))
-                .LogError(ex, "Falha ao registrar o clique da oferta {OfferId}", offer.Id);
+            // Perder a estatística custa menos que perder a venda: o usuário segue para a loja.
+            logger.LogError(ex, "Falha ao registrar o clique da oferta {OfferId}", offer.Id);
         }
 
         return Results.Redirect(offer.AffiliateUrl, permanent: false);

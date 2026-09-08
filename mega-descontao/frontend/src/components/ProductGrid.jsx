@@ -1,8 +1,9 @@
-import OfferCard from './OfferCard'
+import { API_URL } from '../api'
+import ProductCard from './ProductCard'
 
 const SKELETON_COUNT = 8
 
-export default function OfferGrid({ offers, loading, error, onRetry }) {
+export default function ProductGrid({ products, loading, error, onRetry }) {
   if (loading) {
     return (
       <div className="grid">
@@ -20,10 +21,10 @@ export default function OfferGrid({ offers, loading, error, onRetry }) {
 
   if (error) {
     return (
-      <div className="state">
+      <div className="state" role="alert">
         <h2 className="state__title">Não conseguimos carregar as ofertas</h2>
         <p className="state__text">
-          Verifique se a API está rodando em <code>{import.meta.env.VITE_API_URL ?? 'http://localhost:5080'}</code>.
+          Verifique se a API está rodando em <code>{API_URL}</code>.
         </p>
         <button type="button" className="cta cta--inline" onClick={onRetry}>
           Tentar novamente
@@ -32,7 +33,7 @@ export default function OfferGrid({ offers, loading, error, onRetry }) {
     )
   }
 
-  if (offers.length === 0) {
+  if (products.length === 0) {
     return (
       <div className="state">
         <h2 className="state__title">Nenhuma oferta por aqui</h2>
@@ -43,8 +44,8 @@ export default function OfferGrid({ offers, loading, error, onRetry }) {
 
   return (
     <div className="grid">
-      {offers.map((offer) => (
-        <OfferCard key={offer.id} offer={offer} />
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
       ))}
     </div>
   )

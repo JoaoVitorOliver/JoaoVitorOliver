@@ -5,7 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MegaDescontao.Api</RootNamespace>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Globalização ligada de propósito: a normalização de acentos da busca (String.Normalize)
+         depende do ICU, e o catálogo é todo em português. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
