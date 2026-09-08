@@ -13,7 +13,7 @@ em **garimpar, organizar e apresentar**.
 | Camada    | Tecnologia                                       |
 | --------- | ------------------------------------------------ |
 | Front-end | React 19 + Vite                                  |
-| Back-end  | ASP.NET Core 8 (Minimal API)                     |
+| Back-end  | ASP.NET Core 10 (Minimal API)                    |
 | Dados     | EF Core + SQLite (troca para PostgreSQL/SQL Server sem mexer no domínio) |
 
 ```
@@ -58,7 +58,7 @@ Fone Bluetooth
 
 ## Como rodar
 
-Pré-requisitos: **.NET SDK 8** e **Node.js 20.19+**.
+Pré-requisitos: **.NET SDK 10** e **Node.js 20.19+**.
 
 ### 1. API
 
