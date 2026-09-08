@@ -63,7 +63,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             offer.HasIndex(o => o.Status);
             offer.HasIndex(o => o.CurrentPrice);
-            offer.HasIndex(o => new { o.StoreId, o.ExternalProductId });
+
+            // (loja, id externo) é a chave natural da importação. Único de verdade para que
+            // um feed repetido não consiga criar uma segunda linha do mesmo item; o filtro
+            // deixa de fora as ofertas cadastradas à mão, que não têm id externo.
+            offer.HasIndex(o => new { o.StoreId, o.ExternalProductId })
+                .IsUnique()
+                .HasFilter("\"ExternalProductId\" IS NOT NULL");
 
             offer.HasOne(o => o.Product)
                 .WithMany(p => p.Offers)

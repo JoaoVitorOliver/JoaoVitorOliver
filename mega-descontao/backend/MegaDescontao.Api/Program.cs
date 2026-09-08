@@ -74,6 +74,12 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    // WAL deixa a leitura acontecer durante uma escrita. Sem isso, quando o coletor
+    // estiver gravando ofertas a vitrine começa a receber "database is locked".
+    db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+    db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+
     SeedData.EnsureSeeded(db);
 }
 
