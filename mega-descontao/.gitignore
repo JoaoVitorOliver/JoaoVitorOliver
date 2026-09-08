@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Banco SQLite gerado em tempo de execução (as migrations recriam o schema)
+*.db
+*.db-shm
+*.db-wal
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Variáveis locais
+.env.local
+.env.*.local
+
+# Editores
+.vs/
+.idea/
+.DS_Store
