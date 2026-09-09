@@ -73,7 +73,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+
+    // Só chama Migrate() quando há migration pendente. A partir do EF 9 o Migrate()
+    // pega uma trava exclusiva (__EFMigrationsLock) mesmo quando não há nada a aplicar;
+    // se o processo morrer nessa janela, a linha de trava fica no arquivo .db e todo
+    // startup seguinte fica esperando por ela para sempre, sem erro e sem timeout.
+    if (db.Database.GetPendingMigrations().Any())
+    {
+        db.Database.Migrate();
+    }
 
     // WAL deixa a leitura acontecer durante uma escrita. Sem isso, quando o coletor
     // estiver gravando ofertas a vitrine começa a receber "database is locked".

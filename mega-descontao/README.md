@@ -92,6 +92,21 @@ npm run dev
 
 Abre em `http://localhost:5173`. A URL da API vem de `VITE_API_URL` (veja `.env.development`).
 
+### Se a API subir e ficar parada
+
+Se o `dotnet run` imprimir `Acquiring an exclusive lock for migration application` e nunca abrir a
+porta, é a trava de migration do EF Core: ela é gravada no banco antes de aplicar migrations e some
+no fim, mas fica presa se o processo morrer no meio. O código só chama `Migrate()` quando há
+migration pendente, o que evita o caso comum — mas se acontecer com uma migration realmente
+pendente, limpe a trava:
+
+```sql
+DELETE FROM __EFMigrationsLock;
+```
+
+Em desenvolvimento dá para simplesmente apagar `megadescontao.db*` — o banco é recriado com o
+catálogo de demonstração no próximo start.
+
 ## Endpoints
 
 ### Público
