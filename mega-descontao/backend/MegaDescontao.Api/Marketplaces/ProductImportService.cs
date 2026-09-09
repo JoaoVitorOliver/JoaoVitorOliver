@@ -29,7 +29,22 @@ public class ProductImportService(AppDbContext db, ILogger<ProductImportService>
             return new ImportResult(provider.StoreSlug, 0, 0, 0, 0, 0, warnings);
         }
 
-        var offers = await provider.FetchOffersAsync(cancellationToken);
+        IReadOnlyList<MarketplaceOffer> offers;
+
+        try
+        {
+            offers = await provider.FetchOffersAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // A mensagem da loja (assinatura inválida, sem permissão de API, limite estourado)
+            // é o diagnóstico. Devolver 500 sem corpo transformaria isso em adivinhação.
+            logger.LogError(ex, "Falha ao buscar ofertas em {Store}", provider.StoreSlug);
+            warnings.Add($"A chamada ao {provider.DisplayName} falhou: {ex.Message}");
+
+            return new ImportResult(provider.StoreSlug, 0, 0, 0, 0, 0, warnings);
+        }
+
         var now = DateTime.UtcNow;
 
         var store = await db.Stores.FirstOrDefaultAsync(s => s.Slug == provider.StoreSlug, cancellationToken);
