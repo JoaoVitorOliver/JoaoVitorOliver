@@ -192,8 +192,33 @@ mudança de preço e marca como `Unavailable` o que sumiu da origem — mas só 
 | Provider | Situação |
 | -------- | -------- |
 | `JsonFeedProvider` | ✅ Funcionando — importa de um arquivo JSON local |
+| `ShopeeProvider` | ✅ Implementado (GraphQL assinado) — só falta a credencial para ligar |
 | `MercadoLivreProvider` | ⏳ Preparado, aguarda credenciais (aplicação registrada + Programa de Afiliados) |
-| `ShopeeProvider` | ⏳ Preparado, aguarda conta de afiliado aprovada + appId/secret |
+
+### Ligando a Shopee
+
+A Affiliate Open API devolve a oferta **com o link de afiliado já rastreado**, então importar
+resolve dado e monetização na mesma chamada. Com as credenciais em mãos:
+
+```bash
+dotnet user-secrets set "Marketplaces:Shopee:ClientId" "<appId>"
+dotnet user-secrets set "Marketplaces:Shopee:ClientSecret" "<secret>"
+curl -X POST http://localhost:5080/api/admin/import/shopee -H "X-Admin-Key: <sua-chave>"
+```
+
+Ajustes disponíveis em `Marketplaces:Shopee`: `MaxOffers` (padrão 50), `PageSize`,
+`DelayBetweenPagesMs` (a Shopee não publica o limite de requisições — a pausa entre páginas é
+proposital até medirmos o limite real), `DefaultCategory` e `CategoryMap`, que traduz o id numérico
+de categoria da Shopee para o nome usado no site.
+
+Duas coisas que a API **não** entrega e o código contorna: não há descrição de produto (o campo fica
+vazio em vez de inventar texto), e não há "preço de antes" — só o percentual de desconto, a partir do
+qual o preço original é reconstruído. Por isso ele é uma aproximação e pode divergir em centavos do
+que a loja mostra.
+
+A assinatura das chamadas e a tradução dos dados estão cobertas por testes
+(`backend/MegaDescontao.Tests`, `dotnet test`), porque são as duas partes que quebram calado — e as
+únicas que dá para verificar sem as credenciais.
 
 Enquanto as APIs oficiais não são liberadas, o feed JSON alimenta o catálogo:
 

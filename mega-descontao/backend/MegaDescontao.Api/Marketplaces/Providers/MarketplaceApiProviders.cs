@@ -34,25 +34,3 @@ public class MercadoLivreProvider(MarketplaceCredentials credentials) : IMarketp
             "e montar o link pelo Programa de Afiliados antes de habilitar.");
 }
 
-/// Integração com a Shopee Affiliate Open API (endpoint GraphQL).
-///
-/// Mesma situação: depende de conta de afiliado aprovada e das credenciais (appId/secret)
-/// para assinar as requisições. A vantagem é que a resposta oficial já traz o link de
-/// afiliado pronto, resolvendo dado e monetização na mesma chamada.
-public class ShopeeProvider(MarketplaceCredentials credentials) : IMarketplaceProvider
-{
-    public string StoreSlug => "shopee";
-
-    public string DisplayName => "Shopee";
-
-    public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(credentials.ClientId) &&
-        !string.IsNullOrWhiteSpace(credentials.ClientSecret);
-
-    public bool ProvidesFullSnapshot => false;
-
-    public Task<IReadOnlyList<MarketplaceOffer>> FetchOffersAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException(
-            "Integração com a Shopee Affiliate Open API pendente: solicitar acesso de afiliado, " +
-            "obter appId/secret e assinar as chamadas GraphQL antes de habilitar.");
-}

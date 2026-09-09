@@ -3,6 +3,7 @@ using MegaDescontao.Api.Data;
 using MegaDescontao.Api.Endpoints;
 using MegaDescontao.Api.Marketplaces;
 using MegaDescontao.Api.Marketplaces.Providers;
+using MegaDescontao.Api.Marketplaces.Providers.Shopee;
 using MegaDescontao.Api.Security;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -55,8 +56,13 @@ builder.Services.AddHostedService<OfferExpirationService>();
 var marketplaces = builder.Configuration.GetSection("Marketplaces");
 builder.Services.AddSingleton<IMarketplaceProvider>(_ =>
     new MercadoLivreProvider(marketplaces.GetSection("MercadoLivre").Get<MarketplaceCredentials>() ?? new()));
-builder.Services.AddSingleton<IMarketplaceProvider>(_ =>
-    new ShopeeProvider(marketplaces.GetSection("Shopee").Get<MarketplaceCredentials>() ?? new()));
+builder.Services.AddHttpClient(ShopeeProvider.HttpClientName, client =>
+    client.Timeout = TimeSpan.FromSeconds(30));
+
+builder.Services.AddSingleton<IMarketplaceProvider>(sp => new ShopeeProvider(
+    marketplaces.GetSection("Shopee").Get<ShopeeOptions>() ?? new(),
+    sp.GetRequiredService<IHttpClientFactory>(),
+    sp.GetRequiredService<ILogger<ShopeeProvider>>()));
 
 foreach (var feed in builder.Configuration.GetSection("Import:JsonFeeds").Get<JsonFeedOptions[]>() ?? [])
 {
