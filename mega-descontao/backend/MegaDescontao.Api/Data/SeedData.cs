@@ -13,7 +13,8 @@ public static class SeedData
         decimal Price,
         decimal? OriginalPrice,
         string AffiliateUrl,
-        int Clicks);
+        int Clicks,
+        int? ExpiresInHours = null);
 
     private sealed record SeedProduct(
         string Title,
@@ -39,8 +40,6 @@ public static class SeedData
     [
         ("Mercado Livre", "mercado-livre"),
         ("Shopee", "shopee"),
-        ("Temu", "temu"),
-        ("Amazon", "amazon"),
     ];
 
     private static readonly SeedProduct[] Products =
@@ -56,7 +55,8 @@ public static class SeedData
         new("Smartwatch com Monitor Cardíaco e GPS",
             "Tela AMOLED 1.85\", resistente à água e mais de 100 modos esportivos.",
             "smartwatch", "eletronicos", 2,
-            [new("shopee", 149.00m, 349.00m, "https://shopee.com.br/search?keyword=smartwatch", 212)]),
+            // Promoção relâmpago: sai da vitrine sozinha quando o prazo vence.
+            [new("shopee", 149.00m, 349.00m, "https://shopee.com.br/search?keyword=smartwatch", 212, ExpiresInHours: 6)]),
         new("Air Fryer Digital 5L Antiaderente",
             "Painel touch, 8 programas prontos e cesto removível de fácil limpeza.",
             "air-fryer", "casa-e-cozinha", 3,
@@ -64,7 +64,7 @@ public static class SeedData
         new("Kit 4 Organizadores Dobráveis para Armário",
             "Tecido reforçado com visor frontal — ideal para roupas e brinquedos.",
             "organizador", "casa-e-cozinha", 1,
-            [new("temu", 39.90m, 99.90m, "https://www.temu.com/search_result.html?search_key=organizador%20de%20armario", 65)]),
+            [new("shopee", 39.90m, 99.90m, "https://shopee.com.br/search?keyword=organizador%20de%20armario", 65)]),
         new("Teclado Mecânico Gamer RGB ABNT2",
             "Switch blue, anti-ghosting e iluminação com 16 efeitos.",
             "teclado-gamer", "games", 4,
@@ -80,7 +80,7 @@ public static class SeedData
         new("Mochila Antifurto para Notebook 15.6\"",
             "Compartimento acolchoado, porta USB externa e tecido impermeável.",
             "mochila-notebook", "moda-e-acessorios", 6,
-            [new("temu", 89.90m, 189.90m, "https://www.temu.com/search_result.html?search_key=mochila%20notebook", 43)]),
+            [new("shopee", 89.90m, 189.90m, "https://shopee.com.br/search?keyword=mochila%20notebook", 43)]),
         new("Kit Skincare Facial com Vitamina C",
             "Sérum, hidratante e protetor solar FPS 50 para uso diário.",
             "skincare", "beleza", 3,
@@ -96,15 +96,15 @@ public static class SeedData
         new("Jogo de Chaves de Precisão 115 em 1",
             "Pontas magnéticas em aço S2 para celulares, notebooks e consoles.",
             "chaves-precisao", "ferramentas", 8,
-            [new("temu", 49.90m, 129.90m, "https://www.temu.com/search_result.html?search_key=kit%20chaves%20precisao", 39)]),
+            [new("mercado-livre", 49.90m, 129.90m, "https://lista.mercadolivre.com.br/kit-chaves-precisao", 39)]),
         new("Luminária de Mesa LED com Carregador Wireless",
             "3 temperaturas de luz, braço articulado e carregamento por indução.",
             "luminaria-led", "casa-e-cozinha", 2,
-            [new("temu", 99.90m, 219.90m, "https://www.temu.com/search_result.html?search_key=luminaria%20led%20mesa", 27)]),
+            [new("shopee", 99.90m, 219.90m, "https://shopee.com.br/search?keyword=luminaria%20led%20mesa", 27)]),
         new("Caixa de Som Bluetooth à Prova d'Água 20W",
             "IPX7, até 24h de reprodução e pareamento estéreo entre duas unidades.",
             "caixa-som", "eletronicos", 5,
-            [new("amazon", 159.90m, 299.90m, "https://www.amazon.com.br/s?k=caixa+de+som+bluetooth", 113)]),
+            [new("mercado-livre", 159.90m, 299.90m, "https://lista.mercadolivre.com.br/caixa-de-som-bluetooth", 113)]),
         new("Cama Box para Pet com Almofada Removível",
             "Tecido lavável e base antiderrapante — tamanhos P, M e G.",
             "cama-pet", "pet", 6,
@@ -112,7 +112,7 @@ public static class SeedData
         new("Kit 2 Garrafas Térmicas Inox 1L",
             "Mantém a temperatura por até 24h, com alça e tampa antivazamento.",
             "garrafa-termica", "esporte", 9,
-            [new("amazon", 89.90m, 199.90m, "https://www.amazon.com.br/s?k=garrafa+termica+inox", 34)]),
+            [new("mercado-livre", 89.90m, 199.90m, "https://lista.mercadolivre.com.br/garrafa-termica-inox", 34)]),
     ];
 
     public static void EnsureSeeded(AppDbContext db)
@@ -160,6 +160,7 @@ public static class SeedData
                     AffiliateUrl = seedOffer.AffiliateUrl,
                     Status = OfferStatus.Active,
                     ClickCount = seedOffer.Clicks,
+                    ExpiresAt = seedOffer.ExpiresInHours is int hours ? now.AddHours(hours) : null,
                     LastCheckedAt = now,
                     CreatedAt = createdAt,
                     UpdatedAt = createdAt,

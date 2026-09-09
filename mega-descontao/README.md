@@ -1,6 +1,7 @@
 # 🏷️ Mega Descontão
 
-Vitrine agregadora de promoções dos grandes marketplaces (Mercado Livre, Shopee, Temu, Amazon…).
+Vitrine agregadora de promoções de marketplaces. Hoje o foco é **Mercado Livre e Shopee**; a
+arquitetura aceita outras lojas sem mudança estrutural.
 O visitante garimpa as ofertas organizadas por loja, categoria e desconto e, ao clicar em
 **“Aproveitar oferta”**, passa por `/api/go/{offerId}` — que registra o clique e redireciona para o
 link de afiliado guardado no banco.
@@ -193,7 +194,6 @@ mudança de preço e marca como `Unavailable` o que sumiu da origem — mas só 
 | `JsonFeedProvider` | ✅ Funcionando — importa de um arquivo JSON local |
 | `MercadoLivreProvider` | ⏳ Preparado, aguarda credenciais (aplicação registrada + Programa de Afiliados) |
 | `ShopeeProvider` | ⏳ Preparado, aguarda conta de afiliado aprovada + appId/secret |
-| `TemuProvider` | ⏳ Slot criado |
 
 Enquanto as APIs oficiais não são liberadas, o feed JSON alimenta o catálogo:
 
@@ -212,6 +212,21 @@ curl -X POST http://localhost:5080/api/admin/import/shopee -H "X-Admin-Key: ..."
 
 Quando as credenciais oficiais chegarem, o provider oficial passa a vencer automaticamente sobre o
 feed manual (o importador prefere o provider configurado) — sem mudar código.
+
+## Robô de expiração
+
+Um `BackgroundService` sobe junto com a API e, a cada poucos minutos, marca como `Expired` toda
+oferta ativa cujo `ExpiresAt` já passou. O intervalo fica em `Offers:ExpirationCheckMinutes`
+(padrão 5 minutos, mínimo 1). Ele também roda uma passada no start, para o caso de o site ter ficado
+parado enquanto promoções venciam.
+
+A vitrine **já ignora** oferta vencida na hora da consulta, então uma promoção morta nunca aparece
+para o visitante, mesmo entre dois ciclos do robô. O papel dele é deixar o banco honesto: sem isso, o
+`Status` gravado mentiria e a tela do admin mostraria como ativa uma promoção que já acabou.
+
+Falha no robô é logada e não derruba a API — desde o .NET 6, exceção não tratada em
+`BackgroundService` encerra a aplicação inteira, e a vitrine não pode cair por causa de uma rotina
+de manutenção.
 
 ## Segurança
 
@@ -248,9 +263,9 @@ mega-descontao/
 
 1. **Credenciais oficiais**: registrar a aplicação no Mercado Livre e pedir a conta de afiliado da
    Shopee (aprovação leva dias) — é o que destrava os dois providers.
-2. **Agendador**: hoje a importação é disparada por endpoint. Com um `BackgroundService` +
-   `PeriodicTimer`, dá para rodar em cadência escalonada (ofertas quentes com mais frequência que o
-   catálogo inteiro) e chamar `ExpireOutdatedOffersAsync` de tempos em tempos.
+2. **Importação agendada**: a expiração já roda sozinha; a *coleta* ainda é disparada por endpoint.
+   O mesmo padrão do `OfferExpirationService` serve para ela, de preferência em cadência escalonada
+   (ofertas relâmpago com mais frequência que o catálogo inteiro, para não estourar rate limit).
 3. **Painel admin**: a API administrativa já existe; falta a tela.
 4. **PromotionScore**: `PriceHistory` já acumula os dados; falta a regra que compara preço atual com
    a média histórica para destacar oferta boa de verdade.

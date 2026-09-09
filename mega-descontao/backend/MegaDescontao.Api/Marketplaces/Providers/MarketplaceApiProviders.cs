@@ -56,18 +56,3 @@ public class ShopeeProvider(MarketplaceCredentials credentials) : IMarketplacePr
             "Integração com a Shopee Affiliate Open API pendente: solicitar acesso de afiliado, " +
             "obter appId/secret e assinar as chamadas GraphQL antes de habilitar.");
 }
-
-/// Temu entra depois; o slot existe para que adicionar a loja seja só implementar esta classe.
-public class TemuProvider(MarketplaceCredentials credentials) : IMarketplaceProvider
-{
-    public string StoreSlug => "temu";
-
-    public string DisplayName => "Temu";
-
-    public bool IsConfigured => !string.IsNullOrWhiteSpace(credentials.AffiliateId);
-
-    public bool ProvidesFullSnapshot => false;
-
-    public Task<IReadOnlyList<MarketplaceOffer>> FetchOffersAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException("Integração com o programa de afiliados da Temu pendente.");
-}

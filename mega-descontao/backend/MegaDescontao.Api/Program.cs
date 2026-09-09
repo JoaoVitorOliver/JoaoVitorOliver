@@ -46,6 +46,9 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<AdminApiKeyFilter>();
 builder.Services.AddScoped<ProductImportService>();
 
+// Tira do ar sozinho as promoções cujo prazo venceu.
+builder.Services.AddHostedService<OfferExpirationService>();
+
 // Providers de marketplace. Os oficiais ficam registrados mesmo sem credencial: eles se
 // declaram "não configurados" e o importador os ignora, então habilitar depois é só
 // preencher a configuração — nenhuma mudança de código.
@@ -54,8 +57,6 @@ builder.Services.AddSingleton<IMarketplaceProvider>(_ =>
     new MercadoLivreProvider(marketplaces.GetSection("MercadoLivre").Get<MarketplaceCredentials>() ?? new()));
 builder.Services.AddSingleton<IMarketplaceProvider>(_ =>
     new ShopeeProvider(marketplaces.GetSection("Shopee").Get<MarketplaceCredentials>() ?? new()));
-builder.Services.AddSingleton<IMarketplaceProvider>(_ =>
-    new TemuProvider(marketplaces.GetSection("Temu").Get<MarketplaceCredentials>() ?? new()));
 
 foreach (var feed in builder.Configuration.GetSection("Import:JsonFeeds").Get<JsonFeedOptions[]>() ?? [])
 {
