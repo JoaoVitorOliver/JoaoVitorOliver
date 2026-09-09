@@ -195,6 +195,27 @@ mudança de preço e marca como `Unavailable` o que sumiu da origem — mas só 
 | `ShopeeProvider` | ✅ Implementado (GraphQL assinado) — só falta a credencial para ligar |
 | `MercadoLivreProvider` | ⏳ Preparado, aguarda credenciais (aplicação registrada + Programa de Afiliados) |
 
+### Caminho rápido: CSV de links em massa da Shopee
+
+Não depende da Open API. Na Plataforma de Afiliados (web): **Oferta de Produto → selecione os
+produtos → Obter Link**. A Shopee baixa um CSV com a coluna `Offer Link`. Suba esse arquivo:
+
+```bash
+curl.exe -X POST "http://localhost:5080/api/admin/import/shopee/csv?category=Beleza" \
+  -H "X-Admin-Key: <sua-chave>" -F "file=@BatchProductLinks.csv"
+```
+
+O `category` é opcional e classifica o lote inteiro; sem ele, cai em `DefaultCategory`.
+
+O importador é o mesmo da API: idempotente por (loja, id externo), com histórico de preço. E o id
+externo sai como `shopId-itemId`, **o mesmo formato que o provider da Open API produz** — então,
+quando a API for liberada, ela atualiza estas ofertas em vez de duplicá-las.
+
+O que o CSV **não** traz, e o código não inventa: **foto**, **preço original** (logo, sem selo de
+desconto) e **categoria por produto**. Enquanto isso, o card usa o placeholder no lugar da imagem.
+Dá para completar pelo `PUT /api/admin/products/{id}` ou esperar a Open API, que traz imagem e
+percentual de desconto.
+
 ### Ligando a Shopee
 
 A Affiliate Open API devolve a oferta **com o link de afiliado já rastreado**, então importar

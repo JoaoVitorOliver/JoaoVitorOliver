@@ -2,6 +2,8 @@ using MegaDescontao.Api.Common;
 using MegaDescontao.Api.Contracts;
 using MegaDescontao.Api.Data;
 using MegaDescontao.Api.Marketplaces;
+using MegaDescontao.Api.Marketplaces.Providers;
+using MegaDescontao.Api.Marketplaces.Providers.Shopee;
 using MegaDescontao.Api.Models;
 using MegaDescontao.Api.Security;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +41,10 @@ public static class AdminEndpoints
 
         group.MapPost("/import/{storeSlug}", RunImport)
             .WithSummary("Roda o provider da loja e reconcilia o catálogo.");
+
+        group.MapPost("/import/shopee/csv", ImportShopeeCsv)
+            .DisableAntiforgery()
+            .WithSummary("Importa o CSV de links em massa da Plataforma de Afiliados da Shopee.");
 
         group.MapPost("/offers/expire", ExpireOffers)
             .WithSummary("Marca como expiradas as promoções cujo prazo já passou.");
@@ -378,6 +384,62 @@ public static class AdminEndpoints
         // oficial ainda não foi liberada, e sai de cena sozinho quando as credenciais chegarem.
         var provider = candidates.FirstOrDefault(p => p.IsConfigured) ?? candidates[0];
 
+        var result = await importService.ImportAsync(provider, cancellationToken);
+
+        return Results.Ok(new ImportResultResponse(
+            provider.DisplayName,
+            result.StoreSlug,
+            result.Received,
+            result.Created,
+            result.Updated,
+            result.PriceChanges,
+            result.MarkedUnavailable,
+            result.Warnings));
+    }
+
+    private static async Task<IResult> ImportShopeeCsv(
+        IFormFile file,
+        ProductImportService importService,
+        IConfiguration configuration,
+        CancellationToken cancellationToken,
+        string? category = null)
+    {
+        const long maxBytes = 5 * 1024 * 1024;
+
+        if (file.Length == 0)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["file"] = ["Envie o CSV gerado em Oferta de Produto → Obter Link."],
+            });
+        }
+
+        if (file.Length > maxBytes)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["file"] = ["Arquivo maior que 5 MB."],
+            });
+        }
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        var csv = await reader.ReadToEndAsync(cancellationToken);
+
+        var categoryName = string.IsNullOrWhiteSpace(category)
+            ? configuration["Marketplaces:Shopee:DefaultCategory"] ?? "Ofertas Shopee"
+            : category.Trim();
+
+        var offers = ShopeeCsvParser.Parse(csv, categoryName);
+
+        if (offers.Count == 0)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["file"] = ["Nenhuma linha aproveitável. Confira se o arquivo tem as colunas 'Offer Link', 'Item Name' e 'Price'."],
+            });
+        }
+
+        var provider = new InMemoryOfferProvider("shopee", "Shopee (CSV de afiliado)", offers);
         var result = await importService.ImportAsync(provider, cancellationToken);
 
         return Results.Ok(new ImportResultResponse(
