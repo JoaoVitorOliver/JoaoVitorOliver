@@ -60,6 +60,17 @@ Fone Bluetooth
 
 Pré-requisitos: **.NET SDK 10** e **Node.js 20.19+**.
 
+No Windows, o atalho para subir as duas pontas de uma vez:
+
+```powershell
+.\dev.ps1
+```
+
+Ele instala as dependências do front na primeira execução e abre uma janela para cada processo.
+Se o PowerShell bloquear a execução do script, use `powershell -ExecutionPolicy Bypass -File .\dev.ps1`.
+
+Para rodar cada parte na mão:
+
 ### 1. API
 
 ```bash
