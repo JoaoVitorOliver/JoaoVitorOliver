@@ -131,6 +131,11 @@ public static class ProductEndpoints
             .GroupBy(o => o.ProductId)
             .ToDictionary(g => g.Key, g => g.OrderBy(o => o.CurrentPrice).ThenBy(o => o.Id).ToList());
 
+        var lowestFlags = await BuildLowestPriceFlagsAsync(
+            db,
+            offers.ToDictionary(o => o.Id, o => o.CurrentPrice),
+            now);
+
         var items = new List<ProductListItem>(products.Count);
 
         foreach (var product in products)
@@ -155,7 +160,8 @@ public static class ProductEndpoints
                     best.OriginalPrice,
                     Discount(best.CurrentPrice, best.OriginalPrice),
                     best.ClickCount,
-                    best.ExpiresAt),
+                    best.ExpiresAt,
+                    lowestFlags.Contains(best.Id)),
                 productOffers.Count,
                 product.CreatedAt));
         }
@@ -271,6 +277,52 @@ public static class ProductEndpoints
                 .OrderByDescending(p => p.CreatedAt)
                 .ThenByDescending(p => p.Id),
         };
+
+    /// Descobre, numa consulta só para a página inteira, quais ofertas estão no menor preço
+    /// dos últimos 30 dias. A comparação acontece em memória: são poucas linhas por oferta, e
+    /// assim não dependemos de tradução de Min/Max sobre decimal convertido no SQLite.
+    private static async Task<HashSet<int>> BuildLowestPriceFlagsAsync(
+        AppDbContext db,
+        IReadOnlyDictionary<int, decimal> currentPrices,
+        DateTime now)
+    {
+        var flags = new HashSet<int>();
+
+        if (currentPrices.Count == 0)
+        {
+            return flags;
+        }
+
+        var offerIds = currentPrices.Keys.ToList();
+        var since = now.AddDays(-30);
+
+        var history = await db.PriceHistory
+            .AsNoTracking()
+            .Where(h => offerIds.Contains(h.ProductOfferId) && h.CollectedAt >= since)
+            .Select(h => new { h.ProductOfferId, h.Price })
+            .ToListAsync();
+
+        foreach (var group in history.GroupBy(h => h.ProductOfferId))
+        {
+            var prices = group.Select(h => h.Price).ToList();
+
+            // Um preço só observado não prova nada, e se a oferta nunca esteve mais cara
+            // também não há notícia a dar. O selo só sai quando o histórico sustenta.
+            if (prices.Count < 2)
+            {
+                continue;
+            }
+
+            var current = currentPrices[group.Key];
+
+            if (prices.Max() > current && current <= prices.Min())
+            {
+                flags.Add(group.Key);
+            }
+        }
+
+        return flags;
+    }
 
     private static int Discount(decimal current, decimal? original) =>
         original > 0 && original > current

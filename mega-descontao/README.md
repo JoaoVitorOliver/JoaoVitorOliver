@@ -313,6 +313,25 @@ O que **precisa** estar certo em produção:
 Em produção o **seed não roda**: o site sobe vazio e é alimentado pelas ofertas reais. Publicar 16
 produtos fictícios apontando para páginas de busca seria pior que não ter produto nenhum.
 
+## Curadoria (`#/admin`)
+
+O CSV de afiliado não traz **foto** nem **preço de antes**, e um card sem esses dois vira link, não
+vitrine. A tela em `http://localhost:5173/#/admin` (ou `/#/admin` no site publicado) lista o que está
+incompleto e deixa preencher os dois campos em lote. A chave administrativa fica em `sessionStorage`
+— some quando a aba fecha.
+
+Duas regras que sustentam isso:
+
+- **Importação não apaga curadoria.** Campo que a origem não traz é preservado; campo que ela traz,
+  ela atualiza. Sem essa guarda, a primeira reimportação varreria todo o trabalho manual. Coberto por
+  teste (`ProductImportServiceTests`).
+- **Sem preço de antes, nada de desconto inventado.** No lugar, o card mostra **“menor preço 30d”**
+  quando o histórico coletado prova a afirmação: ao menos duas observações no período, a oferta já
+  esteve mais cara e o preço de hoje é o menor. É um selo que dá para defender.
+
+Quando a Open API for liberada, ela passa a trazer `imageUrl` e `priceDiscountRate` sozinha e a
+curadoria manual deixa de ser necessária.
+
 ## Robô de expiração
 
 Um `BackgroundService` sobe junto com a API e, a cada poucos minutos, marca como `Expired` toda

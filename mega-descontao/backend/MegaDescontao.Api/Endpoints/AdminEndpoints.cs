@@ -33,6 +33,9 @@ public static class AdminEndpoints
         group.MapPut("/offers/{offerId:int}", UpdateOffer);
         group.MapDelete("/offers/{offerId:int}", DeleteOffer);
 
+        group.MapPost("/products/enrich", EnrichProducts)
+            .WithSummary("Preenche foto e preço original em lote — o que o CSV de afiliado não traz.");
+
         group.MapGet("/clicks", GetClickReport)
             .WithSummary("Cliques por oferta, do mais clicado para o menos clicado.");
 
@@ -282,6 +285,82 @@ public static class AdminEndpoints
         await db.SaveChangesAsync();
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> EnrichProducts(List<EnrichItem> items, AppDbContext db)
+    {
+        if (items.Count == 0)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["items"] = ["Envie pelo menos um produto."],
+            });
+        }
+
+        var warnings = new List<string>();
+        var ids = items.Select(i => i.ProductId).Distinct().ToList();
+
+        var products = await db.Products
+            .Include(p => p.Offers)
+            .Where(p => ids.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        var now = DateTime.UtcNow;
+        int images = 0, prices = 0;
+
+        foreach (var item in items)
+        {
+            if (!products.TryGetValue(item.ProductId, out var product))
+            {
+                warnings.Add($"Produto {item.ProductId} não encontrado.");
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+            {
+                if (!UrlValidation.IsHttpUrl(item.ImageUrl))
+                {
+                    warnings.Add($"Produto {item.ProductId}: a URL da imagem precisa começar com http:// ou https://.");
+                }
+                else
+                {
+                    product.ImageUrl = item.ImageUrl.Trim();
+                    product.UpdatedAt = now;
+                    images++;
+                }
+            }
+
+            if (item.OriginalPrice is null)
+            {
+                continue;
+            }
+
+            var offer = item.OfferId is int offerId
+                ? product.Offers.FirstOrDefault(o => o.Id == offerId)
+                : product.Offers.Count == 1 ? product.Offers[0] : null;
+
+            if (offer is null)
+            {
+                warnings.Add(product.Offers.Count > 1
+                    ? $"Produto {item.ProductId} tem {product.Offers.Count} ofertas: informe o offerId."
+                    : $"Produto {item.ProductId}: oferta não encontrada.");
+                continue;
+            }
+
+            if (item.OriginalPrice <= offer.CurrentPrice)
+            {
+                warnings.Add($"Produto {item.ProductId}: o preço original precisa ser maior que {offer.CurrentPrice:F2}.");
+                continue;
+            }
+
+            offer.OriginalPrice = item.OriginalPrice;
+            offer.UpdatedAt = now;
+            prices++;
+        }
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new EnrichResultResponse(items.Count, images, prices, warnings));
     }
 
     private static async Task<IResult> GetClickReport(AppDbContext db, int limit = 50)

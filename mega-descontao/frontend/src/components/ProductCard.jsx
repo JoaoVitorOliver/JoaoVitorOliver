@@ -25,7 +25,15 @@ export default function ProductCard({ product }) {
           />
         )}
 
-        {hasDiscount && <span className="badge badge--discount">-{offer.discountPercentage}%</span>}
+        {hasDiscount ? (
+          <span className="badge badge--discount">-{offer.discountPercentage}%</span>
+        ) : (
+          offer.isLowestIn30Days && (
+            <span className="badge badge--lowest" title="Menor preço observado nos últimos 30 dias">
+              menor preço 30d
+            </span>
+          )
+        )}
 
         <span className="badge badge--store" style={storeStyle(offer.store.name)}>
           {offer.store.name}

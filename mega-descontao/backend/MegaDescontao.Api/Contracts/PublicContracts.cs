@@ -13,7 +13,11 @@ public record OfferSummary(
     decimal? OriginalPrice,
     int DiscountPercentage,
     int ClickCount,
-    DateTime? ExpiresAt);
+    DateTime? ExpiresAt,
+    /// Verdadeiro quando o preço de hoje é o menor já observado nos últimos 30 dias E a
+    /// oferta já esteve mais cara nesse período. Sai do histórico que a importação coleta,
+    /// não de um "de/por" informado pela loja — é uma afirmação que dá para provar.
+    bool IsLowestIn30Days = false);
 
 public record ProductListItem(
     int Id,

@@ -97,7 +97,6 @@ public class ProductImportService(AppDbContext db, ILogger<ProductImportService>
                 }
 
                 offer.CurrentPrice = incoming.CurrentPrice;
-                offer.OriginalPrice = incoming.OriginalPrice;
                 offer.AffiliateUrl = incoming.AffiliateUrl;
                 offer.ProductUrl = incoming.ProductUrl;
                 offer.ExpiresAt = incoming.ExpiresAt;
@@ -105,14 +104,31 @@ public class ProductImportService(AppDbContext db, ILogger<ProductImportService>
                 offer.LastCheckedAt = now;
                 offer.UpdatedAt = now;
 
+                // Campo que a origem não traz NÃO é apagado. O CSV de afiliado não tem foto
+                // nem preço de antes; sem esta guarda, a primeira reimportação varreria toda
+                // a curadoria feita à mão. Quando a origem traz o dado, ela manda — é mais
+                // fresca que a curadoria.
+                if (incoming.OriginalPrice is not null)
+                {
+                    offer.OriginalPrice = incoming.OriginalPrice;
+                }
+
                 if (offer.Product is not null)
                 {
                     offer.Product.Title = incoming.Title.Trim();
-                    offer.Product.Description = incoming.Description?.Trim();
-                    offer.Product.ImageUrl = incoming.ImageUrl;
                     offer.Product.Category = category;
                     offer.Product.SearchText = TextSearch.Normalize(incoming.Title, incoming.Description);
                     offer.Product.UpdatedAt = now;
+
+                    if (!string.IsNullOrWhiteSpace(incoming.Description))
+                    {
+                        offer.Product.Description = incoming.Description.Trim();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(incoming.ImageUrl))
+                    {
+                        offer.Product.ImageUrl = incoming.ImageUrl;
+                    }
                 }
 
                 updated++;

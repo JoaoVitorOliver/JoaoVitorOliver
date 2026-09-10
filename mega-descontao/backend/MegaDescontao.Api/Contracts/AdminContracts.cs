@@ -48,6 +48,20 @@ public record AdminProductResponse(
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
+/// Completa o que o CSV de afiliado não traz: a foto e o preço de antes.
+/// O OfferId é opcional — com uma oferta só no produto, o preço vai nela.
+public record EnrichItem(
+    int ProductId,
+    string? ImageUrl,
+    decimal? OriginalPrice,
+    int? OfferId = null);
+
+public record EnrichResultResponse(
+    int Received,
+    int ImagesUpdated,
+    int PricesUpdated,
+    IReadOnlyList<string> Warnings);
+
 public record ClickReportItem(
     int OfferId,
     int ProductId,
