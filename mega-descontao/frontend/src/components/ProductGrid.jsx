@@ -24,7 +24,13 @@ export default function ProductGrid({ products, loading, error, onRetry }) {
       <div className="state" role="alert">
         <h2 className="state__title">Não conseguimos carregar as ofertas</h2>
         <p className="state__text">
-          Verifique se a API está rodando em <code>{API_URL}</code>.
+          {API_URL ? (
+            <>
+              Verifique se a API está rodando em <code>{API_URL}</code>.
+            </>
+          ) : (
+            'Tente novamente em instantes.'
+          )}
         </p>
         <button type="button" className="cta cta--inline" onClick={onRetry}>
           Tentar novamente

@@ -10,6 +10,9 @@ public class InMemoryOfferProvider(
 {
     public string StoreSlug => storeSlug;
 
+    /// Atenção: quando a loja ainda não existe no banco, o importador a cria com este nome,
+    /// e é ele que o visitante vê no selo do card. Passe o nome da marca ("Shopee"), nunca
+    /// uma descrição da origem do dado.
     public string DisplayName => displayName;
 
     public bool IsConfigured => true;

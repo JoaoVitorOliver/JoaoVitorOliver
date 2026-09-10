@@ -439,7 +439,9 @@ public static class AdminEndpoints
             });
         }
 
-        var provider = new InMemoryOfferProvider("shopee", "Shopee (CSV de afiliado)", offers);
+        // O DisplayName vira o nome da loja quando ela ainda não existe no banco, e é ele
+        // que aparece no selo do card. Tem que ser o nome da marca, não o rótulo da origem.
+        var provider = new InMemoryOfferProvider("shopee", "Shopee", offers);
         var result = await importService.ImportAsync(provider, cancellationToken);
 
         return Results.Ok(new ImportResultResponse(

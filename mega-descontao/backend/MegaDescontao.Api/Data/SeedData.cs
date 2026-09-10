@@ -38,7 +38,6 @@ public static class SeedData
 
     private static readonly (string Name, string Slug)[] Stores =
     [
-        ("Mercado Livre", "mercado-livre"),
         ("Shopee", "shopee"),
     ];
 
@@ -47,11 +46,7 @@ public static class SeedData
         new("Fone de Ouvido Bluetooth com Cancelamento de Ruído",
             "Até 40h de bateria, driver de 40mm e estojo de carregamento rápido.",
             "fone-bluetooth", "eletronicos", 1,
-            [
-                new("mercado-livre", 189.90m, 399.90m, "https://lista.mercadolivre.com.br/fone-de-ouvido-bluetooth", 88),
-                // O mesmo produto em duas lojas: é para isso que a oferta vive separada do produto.
-                new("shopee", 179.90m, 399.90m, "https://shopee.com.br/search?keyword=fone%20bluetooth", 54),
-            ]),
+            [new("shopee", 179.90m, 399.90m, "https://shopee.com.br/search?keyword=fone%20bluetooth", 142)]),
         new("Smartwatch com Monitor Cardíaco e GPS",
             "Tela AMOLED 1.85\", resistente à água e mais de 100 modos esportivos.",
             "smartwatch", "eletronicos", 2,
@@ -60,7 +55,7 @@ public static class SeedData
         new("Air Fryer Digital 5L Antiaderente",
             "Painel touch, 8 programas prontos e cesto removível de fácil limpeza.",
             "air-fryer", "casa-e-cozinha", 3,
-            [new("mercado-livre", 279.90m, 549.90m, "https://lista.mercadolivre.com.br/air-fryer", 341)]),
+            [new("shopee", 279.90m, 549.90m, "https://shopee.com.br/search?keyword=air%20fryer", 341)]),
         new("Kit 4 Organizadores Dobráveis para Armário",
             "Tecido reforçado com visor frontal — ideal para roupas e brinquedos.",
             "organizador", "casa-e-cozinha", 1,
@@ -68,7 +63,7 @@ public static class SeedData
         new("Teclado Mecânico Gamer RGB ABNT2",
             "Switch blue, anti-ghosting e iluminação com 16 efeitos.",
             "teclado-gamer", "games", 4,
-            [new("mercado-livre", 199.90m, 329.90m, "https://lista.mercadolivre.com.br/teclado-mecanico-gamer", 128)]),
+            [new("shopee", 199.90m, 329.90m, "https://shopee.com.br/search?keyword=teclado%20mecanico%20gamer", 128)]),
         new("Cadeira Gamer Reclinável com Apoio Lombar",
             "Encosto reclinável até 180°, apoio de braço 2D e suporta 120kg.",
             "cadeira-gamer", "games", 5,
@@ -88,15 +83,15 @@ public static class SeedData
         new("Secador de Cabelo Profissional 2000W",
             "Íons negativos, 3 temperaturas e difusor incluso.",
             "secador", "beleza", 7,
-            [new("mercado-livre", 129.90m, 249.90m, "https://lista.mercadolivre.com.br/secador-de-cabelo", 71)]),
+            [new("shopee", 129.90m, 249.90m, "https://shopee.com.br/search?keyword=secador%20de%20cabelo", 71)]),
         new("Parafusadeira Furadeira 12V com 50 Acessórios",
             "2 baterias de lítio, maleta rígida e torque ajustável em 18 níveis.",
             "parafusadeira", "ferramentas", 4,
-            [new("mercado-livre", 219.90m, 429.90m, "https://lista.mercadolivre.com.br/parafusadeira-furadeira", 58)]),
+            [new("shopee", 219.90m, 429.90m, "https://shopee.com.br/search?keyword=parafusadeira%20furadeira", 58)]),
         new("Jogo de Chaves de Precisão 115 em 1",
             "Pontas magnéticas em aço S2 para celulares, notebooks e consoles.",
             "chaves-precisao", "ferramentas", 8,
-            [new("mercado-livre", 49.90m, 129.90m, "https://lista.mercadolivre.com.br/kit-chaves-precisao", 39)]),
+            [new("shopee", 49.90m, 129.90m, "https://shopee.com.br/search?keyword=kit%20chaves%20precisao", 39)]),
         new("Luminária de Mesa LED com Carregador Wireless",
             "3 temperaturas de luz, braço articulado e carregamento por indução.",
             "luminaria-led", "casa-e-cozinha", 2,
@@ -104,7 +99,7 @@ public static class SeedData
         new("Caixa de Som Bluetooth à Prova d'Água 20W",
             "IPX7, até 24h de reprodução e pareamento estéreo entre duas unidades.",
             "caixa-som", "eletronicos", 5,
-            [new("mercado-livre", 159.90m, 299.90m, "https://lista.mercadolivre.com.br/caixa-de-som-bluetooth", 113)]),
+            [new("shopee", 159.90m, 299.90m, "https://shopee.com.br/search?keyword=caixa%20de%20som%20bluetooth", 113)]),
         new("Cama Box para Pet com Almofada Removível",
             "Tecido lavável e base antiderrapante — tamanhos P, M e G.",
             "cama-pet", "pet", 6,
@@ -112,7 +107,7 @@ public static class SeedData
         new("Kit 2 Garrafas Térmicas Inox 1L",
             "Mantém a temperatura por até 24h, com alça e tampa antivazamento.",
             "garrafa-termica", "esporte", 9,
-            [new("mercado-livre", 89.90m, 199.90m, "https://lista.mercadolivre.com.br/garrafa-termica-inox", 34)]),
+            [new("shopee", 89.90m, 199.90m, "https://shopee.com.br/search?keyword=garrafa%20termica%20inox", 34)]),
     ];
 
     public static void EnsureSeeded(AppDbContext db)

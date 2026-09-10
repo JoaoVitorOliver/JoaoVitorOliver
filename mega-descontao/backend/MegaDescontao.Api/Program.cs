@@ -95,7 +95,13 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
     db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
 
-    SeedData.EnsureSeeded(db);
+    // Catálogo de demonstração só em desenvolvimento. Em produção o site começa vazio e
+    // é alimentado pelas ofertas reais — publicar 16 produtos fictícios com link de busca
+    // seria pior que não ter produto nenhum.
+    if (app.Environment.IsDevelopment())
+    {
+        SeedData.EnsureSeeded(db);
+    }
 }
 
 app.UseExceptionHandler();
@@ -116,5 +122,28 @@ app.MapGoEndpoints();
 app.MapAdminEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).WithTags("Infra");
+
+// Em produção a vitrine é servida pela própria API (a imagem Docker copia o build do React
+// para wwwroot). Um processo só, mesma origem — o que também dispensa CORS. Em
+// desenvolvimento a pasta não existe e o Vite continua servindo o front à parte.
+if (Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "wwwroot")))
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+
+    app.MapFallback(context =>
+    {
+        // Rota de API inexistente tem que responder 404, e não a página do site.
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return Task.CompletedTask;
+        }
+
+        context.Response.ContentType = "text/html";
+        return context.Response.SendFileAsync(
+            Path.Combine(app.Environment.ContentRootPath, "wwwroot", "index.html"));
+    });
+}
 
 app.Run();

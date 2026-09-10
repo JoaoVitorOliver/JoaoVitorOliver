@@ -259,6 +259,30 @@ curl -X POST http://localhost:5080/api/admin/import/shopee -H "X-Admin-Key: ..."
 Quando as credenciais oficiais chegarem, o provider oficial passa a vencer automaticamente sobre o
 feed manual (o importador prefere o provider configurado) — sem mudar código.
 
+## Deploy
+
+A imagem Docker empacota **tudo num processo só**: a API serve a API e a vitrine na mesma origem,
+o que dispensa CORS e deixa um endereço só para configurar.
+
+```bash
+docker build -t mega-descontao .
+docker run -p 8080:8080 \
+  -v mega-dados:/data \
+  -e Admin__ApiKey="uma-chave-forte-de-verdade" \
+  mega-descontao
+```
+
+O que **precisa** estar certo em produção:
+
+| Item | Por quê |
+| ---- | ------- |
+| `-v` num volume | O SQLite vive em `/data`. Sem volume, cada deploy apaga catálogo e histórico de cliques. |
+| `Admin__ApiKey` | Sem ela, `/api/admin/*` responde 503 e você não consegue importar. Com uma fraca, qualquer um edita seu catálogo. |
+| HTTPS | Fica a cargo do host (Fly, Railway, Azure, Render fazem isso sozinhos). |
+
+Em produção o **seed não roda**: o site sobe vazio e é alimentado pelas ofertas reais. Publicar 16
+produtos fictícios apontando para páginas de busca seria pior que não ter produto nenhum.
+
 ## Robô de expiração
 
 Um `BackgroundService` sobe junto com a API e, a cada poucos minutos, marca como `Expired` toda
