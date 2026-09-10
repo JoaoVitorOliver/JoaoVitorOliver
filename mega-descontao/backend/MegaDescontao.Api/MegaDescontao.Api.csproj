@@ -8,6 +8,7 @@
     <!-- Globalização ligada de propósito: a normalização de acentos da busca (String.Normalize)
          depende do ICU, e o catálogo é todo em português. -->
     <InvariantGlobalization>false</InvariantGlobalization>
+    <UserSecretsId>4815bd04-60b8-4f2e-923a-03be97a25a29</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
