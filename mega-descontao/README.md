@@ -313,6 +313,36 @@ O que **precisa** estar certo em produção:
 Em produção o **seed não roda**: o site sobe vazio e é alimentado pelas ofertas reais. Publicar 16
 produtos fictícios apontando para páginas de busca seria pior que não ter produto nenhum.
 
+## Contas
+
+Conta é **opcional**: o visitante anônimo usa o site inteiro. O botão **Entrar**, no canto direito
+do header, abre o diálogo de login e cadastro.
+
+Autenticação pelo **ASP.NET Core Identity**, com os endpoints prontos em `/api/auth`
+(`register`, `login`, `me`, `logout`). Sessão por **cookie httpOnly** — o JavaScript não lê o cookie,
+então nem XSS nem extensão conseguem roubá-lo, diferente de token no `localStorage`.
+
+| Papel | O que muda |
+| ----- | ---------- |
+| Anônimo | Vê a vitrine completa |
+| Usuário | Mesmo acesso, com conta própria (nichos e feed personalizado vêm na próxima etapa) |
+| Admin | Menu ganha **Curadoria**, e `/api/admin/*` abre pela sessão, sem chave |
+
+### Administrador
+
+Em **produção**, o administrador é criado a partir da configuração — sem isso, nenhum é criado:
+
+```bash
+Admin__Email="voce@seudominio.com"
+Admin__Password="uma-senha-forte"
+```
+
+Em **desenvolvimento**, se nada estiver configurado, sobe um par conhecido e o log avisa:
+`admin@megadescontao.local` / `Admin@12345`. Ele existe só fora de produção.
+
+A chave `Admin:ApiKey` continua valendo para automação (upload de CSV por `curl`, scripts). São dois
+caminhos para a mesma porta: sessão para a tela, chave para máquina.
+
 ## Curadoria (`#/admin`)
 
 O CSV de afiliado não traz **foto** nem **preço de antes**, e um card sem esses dois vira link, não

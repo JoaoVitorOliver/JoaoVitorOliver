@@ -27,6 +27,8 @@ export function setAdminKey(key) {
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    // Manda o cookie de sessão: quem entrou como administrador não precisa de chave.
+    credentials: 'include',
     headers: {
       'X-Admin-Key': getAdminKey(),
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),

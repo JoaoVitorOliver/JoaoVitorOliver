@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { formatPrice } from '../utils/format'
+import { useAuth } from '../auth/useAuth'
 import { enrichProducts, fetchAdminProducts, getAdminKey, setAdminKey } from './adminApi'
 
 /// Tela de curadoria: completa o que o CSV de afiliado não traz — foto e preço de antes.
 /// Fica de pé até a Open API passar a trazer esses campos sozinha.
 export default function AdminPage() {
+  const { user, checking } = useAuth()
   const [key, setKey] = useState(getAdminKey())
   const [authenticated, setAuthenticated] = useState(Boolean(getAdminKey()))
   const [products, setProducts] = useState([])
@@ -32,10 +34,10 @@ export default function AdminPage() {
   }, [])
 
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated || user?.isAdmin) {
       load()
     }
-  }, [authenticated, load])
+  }, [authenticated, user, load])
 
   function entrar(event) {
     event.preventDefault()
@@ -84,12 +86,20 @@ export default function AdminPage() {
   const visiveis = onlyIncomplete ? products.filter(incompleto) : products
   const pendentes = Object.keys(edits).length
 
-  if (!authenticated) {
+  if (checking) {
+    return <div className="admin admin--login" />
+  }
+
+  // Quem entrou como administrador não precisa de chave nenhuma: a sessão já autoriza.
+  if (!authenticated && !user?.isAdmin) {
     return (
       <div className="admin admin--login">
         <form className="admin__login" onSubmit={entrar}>
           <h1 className="admin__title">Curadoria</h1>
-          <p className="admin__hint">Informe a chave administrativa configurada no servidor.</p>
+          <p className="admin__hint">
+            Entre com sua conta de administrador na vitrine, ou informe a chave configurada no
+            servidor.
+          </p>
           <input
             type="password"
             className="search__input"

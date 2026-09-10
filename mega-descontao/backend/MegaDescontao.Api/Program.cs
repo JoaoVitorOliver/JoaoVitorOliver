@@ -4,7 +4,9 @@ using MegaDescontao.Api.Endpoints;
 using MegaDescontao.Api.Marketplaces;
 using MegaDescontao.Api.Marketplaces.Providers;
 using MegaDescontao.Api.Marketplaces.Providers.Shopee;
+using MegaDescontao.Api.Models;
 using MegaDescontao.Api.Security;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddAuthorization();
+builder.Services
+    .AddIdentityApiEndpoints<AppUser>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        // Comprimento é o que mais protege na prática; exigir símbolo só empurra o usuário
+        // para "Senha1!" e para o post-it.
+        options.Password.RequiredLength = 8;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Lockout.MaxFailedAccessAttempts = 10;
+    })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
@@ -30,7 +46,10 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 builder.Services.AddCors(options => options.AddPolicy(WebCorsPolicy, policy => policy
     .WithOrigins(allowedOrigins)
     .AllowAnyHeader()
-    .AllowAnyMethod()));
+    .AllowAnyMethod()
+    // Necessário para o cookie de sessão viajar em desenvolvimento, quando o front está na
+    // 5173 e a API na 5080. Em produção os dois compartilham a origem e isso é irrelevante.
+    .AllowCredentials()));
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -103,6 +122,8 @@ using (var scope = app.Services.CreateScope())
     {
         SeedData.EnsureSeeded(db);
     }
+
+    await AdminBootstrap.EnsureAdminAsync(scope.ServiceProvider, app.Environment);
 }
 
 // Atrás de um túnel ou proxy reverso (Cloudflare Tunnel, nginx, o proxy de um PaaS), toda
@@ -135,6 +156,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors(WebCorsPolicy);
 app.UseRateLimiter();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapAuthEndpoints();
 app.MapProductEndpoints();
 app.MapCatalogEndpoints();
 app.MapGoEndpoints();

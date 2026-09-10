@@ -1,9 +1,10 @@
 using MegaDescontao.Api.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MegaDescontao.Api.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser>(options)
 {
     public DbSet<Category> Categories => Set<Category>();
 
@@ -19,6 +20,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Cria as tabelas do Identity antes das nossas.
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Category>(category =>
         {
             category.Property(c => c.Name).IsRequired().HasMaxLength(80);

@@ -4,6 +4,8 @@ import Footer from './components/Footer'
 import Header from './components/Header'
 import Pagination from './components/Pagination'
 import ProductGrid from './components/ProductGrid'
+import AuthDialog from './auth/AuthDialog'
+import { useAuth } from './auth/useAuth'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { useFilterOptions } from './hooks/useFilterOptions'
 import { useProducts } from './hooks/useProducts'
@@ -18,6 +20,9 @@ export default function App() {
   const [sort, setSort] = useState(DEFAULT_SORT)
   const [page, setPage] = useState(1)
 
+  const [authAberto, setAuthAberto] = useState(false)
+
+  const { user, entrar, cadastrar, sair } = useAuth()
   const search = useDebouncedValue(searchInput)
   const { stores, categories } = useFilterOptions()
   const { items, total, totalPages, loading, error, reload } = useProducts({
@@ -61,7 +66,20 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header search={searchInput} onSearchChange={changeFilter(setSearchInput)} />
+      <Header
+        search={searchInput}
+        onSearchChange={changeFilter(setSearchInput)}
+        user={user}
+        onEntrar={() => setAuthAberto(true)}
+        onSair={sair}
+      />
+
+      <AuthDialog
+        open={authAberto}
+        onClose={() => setAuthAberto(false)}
+        onLogin={entrar}
+        onRegister={cadastrar}
+      />
 
       <main className="container main">
         <FilterBar
