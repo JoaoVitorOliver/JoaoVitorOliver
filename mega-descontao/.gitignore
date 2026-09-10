@@ -21,3 +21,7 @@ dist/
 .vs/
 .idea/
 .DS_Store
+
+# Saida da publicacao local e banco de producao
+publish/
+data/

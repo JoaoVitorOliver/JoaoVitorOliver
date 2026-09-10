@@ -259,7 +259,37 @@ curl -X POST http://localhost:5080/api/admin/import/shopee -H "X-Admin-Key: ..."
 Quando as credenciais oficiais chegarem, o provider oficial passa a vencer automaticamente sobre o
 feed manual (o importador prefere o provider configurado) — sem mudar código.
 
-## Deploy
+## Publicar da sua máquina (Cloudflare Tunnel)
+
+Caminho sem custo e sem trocar o banco. Um terminal sobe o site, outro cria o túnel.
+
+```powershell
+# 1. sobe em modo produção, com a vitrine servida pela própria API
+.\publish.ps1 -AdminKey "uma-chave-forte-de-verdade"
+
+# 2. em outro terminal, expõe na internet com HTTPS
+winget install --id Cloudflare.cloudflared
+cloudflared tunnel --url http://localhost:8080
+```
+
+O `cloudflared` imprime uma URL `https://algo.trycloudflare.com` — é o endereço público do site,
+sem precisar de conta nem domínio. A URL **muda a cada execução**: serve para testar e mostrar para
+alguém, não para divulgar. Endereço fixo exige um domínio na Cloudflare e um túnel nomeado.
+
+Três coisas que o script resolve e que quebrariam se você subisse na mão:
+
+- **O banco fica em `data/`, fora de `publish/`.** A pasta de publicação é apagada e recriada a cada
+  execução; com o banco dentro dela, cada republicação levaria junto o catálogo e o histórico.
+- **`Hosting:BehindProxy` ligado.** Atrás do túnel, toda requisição chega de `127.0.0.1`. Sem ler o
+  cabeçalho encaminhado, o rate limit por IP colocaria todos os visitantes na mesma cota de
+  60 req/min e o site cairia com pouco movimento.
+- **A chave de admin vai por variável de ambiente.** Em `Production` o `user-secrets` não é
+  carregado — a chave que você configurou para o desenvolvimento simplesmente não vale aqui.
+
+A aplicação escuta só em `localhost`: quem a alcança é o túnel, nunca a internet direto. Por isso
+confiar no cabeçalho encaminhado é seguro nesse arranjo.
+
+## Deploy em container
 
 A imagem Docker empacota **tudo num processo só**: a API serve a API e a vitrine na mesma origem,
 o que dispensa CORS e deixa um endereço só para configurar.

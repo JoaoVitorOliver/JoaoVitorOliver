@@ -5,6 +5,7 @@ using MegaDescontao.Api.Marketplaces;
 using MegaDescontao.Api.Marketplaces.Providers;
 using MegaDescontao.Api.Marketplaces.Providers.Shopee;
 using MegaDescontao.Api.Security;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
@@ -102,6 +103,24 @@ using (var scope = app.Services.CreateScope())
     {
         SeedData.EnsureSeeded(db);
     }
+}
+
+// Atrás de um túnel ou proxy reverso (Cloudflare Tunnel, nginx, o proxy de um PaaS), toda
+// requisição chega do endereço local do proxy. Sem ler o cabeçalho encaminhado, o rate limit
+// por IP colocaria TODOS os visitantes na mesma cota e o site cairia com pouco movimento.
+// Confiar no cabeçalho só é seguro porque a aplicação escuta em localhost: quem fala com ela
+// é o túnel, não a internet.
+if (builder.Configuration.GetValue<bool>("Hosting:BehindProxy"))
+{
+    var forwardedOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    };
+
+    forwardedOptions.KnownNetworks.Clear();
+    forwardedOptions.KnownProxies.Clear();
+
+    app.UseForwardedHeaders(forwardedOptions);
 }
 
 app.UseExceptionHandler();
