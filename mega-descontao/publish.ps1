@@ -7,6 +7,8 @@
 # Se o PowerShell bloquear:  powershell -ExecutionPolicy Bypass -File .\publish.ps1 -AdminKey "..."
 
 param(
+    [string]$AdminEmail = $env:MEGA_ADMIN_EMAIL,
+    [string]$AdminPassword = $env:MEGA_ADMIN_PASSWORD,
     [string]$AdminKey = $env:MEGA_ADMIN_KEY,
     [int]$Port = 8080
 )
@@ -16,9 +18,11 @@ $root = $PSScriptRoot
 $publishDir = Join-Path $root 'publish'
 $dataDir = Join-Path $root 'data'
 
-if (-not $AdminKey) {
-    Write-Host "AVISO: sem chave de admin, /api/admin/* responde 503 e voce nao consegue importar." -ForegroundColor Yellow
-    Write-Host "       Rode:  .\publish.ps1 -AdminKey 'sua-chave-forte'" -ForegroundColor Yellow
+if (-not $AdminEmail -or -not $AdminPassword) {
+    Write-Host "AVISO: sem -AdminEmail e -AdminPassword, nenhum administrador e criado e voce nao" -ForegroundColor Yellow
+    Write-Host "       consegue entrar na tela de curadoria. Em producao o sistema nao inventa" -ForegroundColor Yellow
+    Write-Host "       credencial: ou voce define, ou nao existe admin." -ForegroundColor Yellow
+    Write-Host "       Rode:  .\publish.ps1 -AdminEmail 'voce@dominio.com' -AdminPassword 'senha-forte'" -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -52,8 +56,10 @@ $env:ConnectionStrings__Default = "Data Source=$dataDir\megadescontao.db"
 # Faz a API ler o IP real do visitante no cabecalho encaminhado pelo tunel. Sem isso o
 # rate limit trataria todo mundo como um visitante so.
 $env:Hosting__BehindProxy = 'true'
-# Em Producao o user-secrets NAO e carregado, entao a chave precisa vir por variavel.
+# Em Producao o user-secrets NAO e carregado, entao tudo isso precisa vir por variavel.
 if ($AdminKey) { $env:Admin__ApiKey = $AdminKey }
+if ($AdminEmail) { $env:Admin__Email = $AdminEmail }
+if ($AdminPassword) { $env:Admin__Password = $AdminPassword }
 
 Push-Location $publishDir
 try {
